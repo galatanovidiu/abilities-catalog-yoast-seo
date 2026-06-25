@@ -35,12 +35,15 @@ final class Integration {
 	/**
 	 * The exact `og-yoast/*` ability names the `og-yoast` domain tool owns, in tool order.
 	 *
-	 * Empty for now: the add-on registers no abilities yet. Each batch appends the
-	 * names it lands here so the tool lists them in the order an agent should see them.
+	 * Each batch appends the names it lands here so the tool lists them in the order
+	 * an agent should see them.
 	 *
 	 * @var list<string>
 	 */
-	private const ABILITIES = array();
+	private const ABILITIES = array(
+		'og-yoast/get-post-seo',
+		'og-yoast/get-post-score',
+	);
 
 	/**
 	 * Registers the MCP filter hooks.

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GalatanOvidiu\AbilitiesCatalogYoast\Support;
 
 use WPSEO_Meta;
+use WPSEO_Options;
 use WPSEO_Rank;
 use WP_Error;
 
@@ -121,5 +122,23 @@ final class YoastPlugin {
 			'value' => $value,
 			'rank'  => (string) $rank->get_rank(),
 		);
+	}
+
+	/**
+	 * Reads one Yoast option value through Yoast's own option store.
+	 *
+	 * Wraps `WPSEO_Options::get()`, which resolves an option key against Yoast's
+	 * registered option groups (e.g. `wpseo_social`, `wpseo_titles`) and returns the
+	 * stored value or the supplied default when unset. Pass `$groups` to scope the
+	 * lookup to a specific option group when a key name is not globally unique;
+	 * Yoast expects an array of group names, so a single group name is wrapped here.
+	 *
+	 * @param string      $key           The option key to read.
+	 * @param mixed       $default_value The value returned when the key is unset. Default null.
+	 * @param string|null $groups        The option group to scope the lookup to, or null for all. Default null.
+	 * @return mixed The stored option value, or `$default_value` when unset.
+	 */
+	public static function getOption( string $key, $default_value = null, ?string $groups = null ) {
+		return WPSEO_Options::get( $key, $default_value, null === $groups ? array() : array( $groups ) );
 	}
 }
