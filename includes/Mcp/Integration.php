@@ -60,6 +60,10 @@ final class Integration {
 		'og-yoast/get-social-settings',
 		'og-yoast/get-indexing-settings',
 		'og-yoast/get-general-settings',
+		'og-yoast/update-search-appearance',
+		'og-yoast/update-breadcrumbs',
+		'og-yoast/update-knowledge-graph',
+		'og-yoast/update-social-settings',
 	);
 
 	/**

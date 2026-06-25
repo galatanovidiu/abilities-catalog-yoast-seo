@@ -305,4 +305,26 @@ final class YoastPlugin {
 
 		return $option;
 	}
+
+	/**
+	 * Writes one Yoast setting key through Yoast's own option store.
+	 *
+	 * Wraps `WPSEO_Options::set()`, which resolves the key to its owning group, writes
+	 * it through `update_option`, preserves the sibling keys, and re-validates the whole
+	 * group via Yoast's per-group `sanitize_option_<group>` filter. There is no reliable
+	 * success signal: `set()` returns `true`/`false` from a round-trip check for a known
+	 * key, but returns `null` for an unknown key after writing only the in-memory cache.
+	 * Callers MUST therefore allow-list the key before calling and re-read the group with
+	 * {@see getOptionGroup()} to confirm the value stuck — a non-`true` return means the
+	 * write did not land. The `$group` is the option group that owns the key
+	 * (`wpseo`, `wpseo_titles`, `wpseo_social`).
+	 *
+	 * @param string $key   The setting key to write (without an option-array prefix).
+	 * @param mixed  $value The value to store; Yoast's per-group `validate()` normalizes it.
+	 * @param string $group The option group that owns the key.
+	 * @return mixed `true` when the value round-tripped, `false` when it did not, `null` for an unknown key.
+	 */
+	public static function setOption( string $key, $value, string $group ) {
+		return WPSEO_Options::set( $key, $value, $group );
+	}
 }
