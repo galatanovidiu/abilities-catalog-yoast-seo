@@ -54,6 +54,12 @@ final class Integration {
 		'og-yoast/get-author-seo',
 		'og-yoast/update-author-seo',
 		'og-yoast/update-author-noindex',
+		'og-yoast/get-search-appearance',
+		'og-yoast/get-breadcrumbs',
+		'og-yoast/get-knowledge-graph',
+		'og-yoast/get-social-settings',
+		'og-yoast/get-indexing-settings',
+		'og-yoast/get-general-settings',
 	);
 
 	/**

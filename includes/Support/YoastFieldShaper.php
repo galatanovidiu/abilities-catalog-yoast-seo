@@ -207,4 +207,41 @@ final class YoastFieldShaper {
 			'author_archives_enabled' => YoastPlugin::authorArchivesEnabled(),
 		);
 	}
+
+	/**
+	 * Resolves a Yoast title-separator slug to its display glyph.
+	 *
+	 * Yoast stores the search-appearance separator as a slug (e.g. `sc-dash`), not the
+	 * character it renders. This maps each slug to the exact `option` value from Yoast's
+	 * own `WPSEO_Option_Titles::get_separator_option_list()` (HTML entities copied
+	 * verbatim) and decodes it to a UTF-8 glyph, so a consumer sees `–` rather than
+	 * `sc-ndash`. An unknown slug returns `''` (the caller surfaces the raw slug too).
+	 *
+	 * @param string $slug The stored separator slug (e.g. `sc-dash`, `sc-pipe`).
+	 * @return string The display glyph, or `''` when the slug is unknown.
+	 */
+	public static function separatorGlyph( string $slug ): string {
+		$entities = array(
+			'sc-dash'   => '-',
+			'sc-ndash'  => '&#8211;',
+			'sc-mdash'  => '&#8212;',
+			'sc-colon'  => ':',
+			'sc-middot' => '&#183;',
+			'sc-bull'   => '&#8226;',
+			'sc-star'   => '*',
+			'sc-smstar' => '&#8902;',
+			'sc-pipe'   => '|',
+			'sc-tilde'  => '~',
+			'sc-laquo'  => '&#171;',
+			'sc-raquo'  => '&#187;',
+			'sc-lt'     => '&#062;',
+			'sc-gt'     => '&#060;',
+		);
+
+		if ( ! isset( $entities[ $slug ] ) ) {
+			return '';
+		}
+
+		return html_entity_decode( $entities[ $slug ], ENT_QUOTES, 'UTF-8' );
+	}
 }

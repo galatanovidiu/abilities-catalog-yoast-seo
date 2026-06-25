@@ -274,4 +274,35 @@ final class YoastPlugin {
 	public static function authorArchivesEnabled(): bool {
 		return ! (bool) WPSEO_Options::get( 'disable-author', false, array( 'wpseo_titles' ) );
 	}
+
+	/**
+	 * Reads one whole Yoast option group through Yoast's own option store.
+	 *
+	 * Wraps `WPSEO_Options::get_option()`, which returns the full stored array for one
+	 * registered group — `wpseo`, `wpseo_titles`, or `wpseo_social` — with Yoast's
+	 * defaults already merged in. The settings-read abilities curate this array down to
+	 * their own allow-list. A group that cannot be read (unknown name, or Yoast not
+	 * fully loaded) yields a typed `WP_Error` so the ability can surface a clear failure
+	 * instead of treating a non-array as empty settings.
+	 *
+	 * @param string $group The option group name (`wpseo`, `wpseo_titles`, `wpseo_social`).
+	 * @return array<string,mixed>|\WP_Error The full option array, or a typed read error.
+	 */
+	public static function getOptionGroup( string $group ) {
+		$option = WPSEO_Options::get_option( $group );
+
+		if ( ! is_array( $option ) ) {
+			return new WP_Error(
+				'yoast_settings_unavailable',
+				sprintf(
+					/* translators: %s: Yoast option group name. */
+					__( 'Could not read Yoast %s settings. Confirm Yoast SEO is active and configured, then retry.', 'abilities-catalog-yoast' ),
+					$group
+				),
+				array( 'status' => 500 )
+			);
+		}
+
+		return $option;
+	}
 }
