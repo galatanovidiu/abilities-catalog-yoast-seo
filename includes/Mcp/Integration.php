@@ -64,6 +64,9 @@ final class Integration {
 		'og-yoast/update-breadcrumbs',
 		'og-yoast/update-knowledge-graph',
 		'og-yoast/update-social-settings',
+		'og-yoast/update-indexing-settings',
+		'og-yoast/update-general-settings',
+		'og-yoast/rebuild-seo-index',
 	);
 
 	/**

@@ -9,7 +9,16 @@ use WPSEO_Options;
 use WPSEO_Rank;
 use WPSEO_Taxonomy_Meta;
 use WP_Error;
+use Yoast\WP\SEO\Actions\Indexing\Indexable_General_Indexation_Action;
+use Yoast\WP\SEO\Actions\Indexing\Indexable_Indexing_Complete_Action;
+use Yoast\WP\SEO\Actions\Indexing\Indexable_Post_Indexation_Action;
+use Yoast\WP\SEO\Actions\Indexing\Indexable_Post_Type_Archive_Indexation_Action;
+use Yoast\WP\SEO\Actions\Indexing\Indexable_Term_Indexation_Action;
+use Yoast\WP\SEO\Actions\Indexing\Indexing_Prepare_Action;
+use Yoast\WP\SEO\Actions\Indexing\Post_Link_Indexing_Action;
+use Yoast\WP\SEO\Actions\Indexing\Term_Link_Indexing_Action;
 use Yoast\WP\SEO\Config\Schema_Types;
+use Yoast\WP\SEO\Helpers\Indexable_Helper;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -326,5 +335,108 @@ final class YoastPlugin {
 	 */
 	public static function setOption( string $key, $value, string $group ) {
 		return WPSEO_Options::set( $key, $value, $group );
+	}
+
+	/**
+	 * Whether Yoast considers this environment one where indexables should be built.
+	 *
+	 * Wraps `Indexable_Helper::should_index_indexables()` (resolved from Yoast's DI
+	 * container), which returns whether the site is in production mode, run through the
+	 * `Yoast\WP\SEO\should_index_indexables` filter. On a non-production environment Yoast
+	 * skips indexing, so the rebuild ability checks this first and refuses with a clear
+	 * error rather than running a silent no-op.
+	 *
+	 * @return bool True when Yoast would build indexables on this environment.
+	 */
+	public static function shouldIndexIndexables(): bool {
+		return (bool) YoastSEO()->classes->get( Indexable_Helper::class )->should_index_indexables();
+	}
+
+	/**
+	 * Rebuilds Yoast's indexable cache for the current site, additively, in one call.
+	 *
+	 * Replicates the synchronous drain loop of Yoast's own `wp yoast index` command
+	 * (`Index_Command::run_indexation_actions()`) WITHOUT the destructive `--reindex`
+	 * clear: it resolves the six indexation actions plus the prepare and complete actions
+	 * from Yoast's DI container (never `new` — the actions have `@required` setters wired
+	 * only by the container), prepares once, drains each action to completion, then runs
+	 * the complete action. It does not call `clear()`, so existing indexables are kept and
+	 * the rebuild only fills in what is missing. Large sites may need more than one request
+	 * (a non-zero `remaining` count says so); the JS background indexer / `wp yoast index`
+	 * remains the escape hatch there.
+	 *
+	 * The caller is responsible for the production-environment guard
+	 * ({@see shouldIndexIndexables()}) and the capability check; this method assumes both
+	 * have passed.
+	 *
+	 * @return array{actions: array<string, array{indexed: int, remaining: int}>, total_indexed: int, total_remaining: int}|\WP_Error
+	 *               Per-action indexed/remaining counts and the run totals, or a typed error
+	 *               when Yoast's container cannot resolve an indexation action.
+	 */
+	public static function rebuildIndexableIndex() {
+		try {
+			$classes = YoastSEO()->classes;
+
+			// The six indexation actions, in the order Yoast's own index command drains them.
+			$actions = array(
+				'posts'              => $classes->get( Indexable_Post_Indexation_Action::class ),
+				'terms'              => $classes->get( Indexable_Term_Indexation_Action::class ),
+				'post type archives' => $classes->get( Indexable_Post_Type_Archive_Indexation_Action::class ),
+				'general objects'    => $classes->get( Indexable_General_Indexation_Action::class ),
+				'post links'         => $classes->get( Post_Link_Indexing_Action::class ),
+				'term links'         => $classes->get( Term_Link_Indexing_Action::class ),
+			);
+
+			$classes->get( Indexing_Prepare_Action::class )->prepare();
+
+			$summary         = array();
+			$total_indexed   = 0;
+			$total_remaining = 0;
+
+			foreach ( $actions as $name => $action ) {
+				$indexed = 0;
+				$total   = (int) $action->get_total_unindexed();
+
+				if ( $total > 0 ) {
+					$limit = (int) $action->get_limit();
+
+					// Drain: index() returns the batch it processed; keep going while a full
+					// batch comes back, exactly as Yoast's command does.
+					do {
+						$count    = count( (array) $action->index() );
+						$indexed += $count;
+					} while ( $count >= $limit );
+				}
+
+				// index() deletes the unindexed-count transient, so this re-reads the live
+				// remaining count (0 on a fully drained site).
+				$remaining = (int) $action->get_total_unindexed();
+
+				$summary[ $name ] = array(
+					'indexed'   => $indexed,
+					'remaining' => $remaining,
+				);
+				$total_indexed   += $indexed;
+				$total_remaining += $remaining;
+			}
+
+			$classes->get( Indexable_Indexing_Complete_Action::class )->complete();
+
+			return array(
+				'actions'         => $summary,
+				'total_indexed'   => $total_indexed,
+				'total_remaining' => $total_remaining,
+			);
+		} catch ( \Throwable $e ) {
+			return new WP_Error(
+				'og_yoast_rebuild_failed',
+				sprintf(
+					/* translators: %s: the underlying error message. */
+					__( 'Yoast could not rebuild the SEO index: %s', 'abilities-catalog-yoast' ),
+					$e->getMessage()
+				),
+				array( 'status' => 500 )
+			);
+		}
 	}
 }
