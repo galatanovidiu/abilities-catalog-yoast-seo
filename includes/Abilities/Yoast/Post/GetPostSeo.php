@@ -237,61 +237,6 @@ final class GetPostSeo implements ConditionalAbility {
 			);
 		}
 
-		$result = array(
-			'post_id'             => $post_id,
-			'focus_keyphrase'     => YoastPlugin::getPostMetaValue( 'focuskw', $post_id ),
-			'seo_title'           => YoastPlugin::getPostMetaValue( 'title', $post_id ),
-			'meta_description'    => YoastPlugin::getPostMetaValue( 'metadesc', $post_id ),
-			'canonical'           => YoastPlugin::getPostMetaValue( 'canonical', $post_id ),
-			'robots_noindex'      => YoastFieldShaper::robotsNoindexLabel( YoastPlugin::getPostMetaValue( 'meta-robots-noindex', $post_id ) ),
-			'robots_nofollow'     => '1' === YoastPlugin::getPostMetaValue( 'meta-robots-nofollow', $post_id ) ? 'nofollow' : 'follow',
-			'robots_advanced'     => $this->splitAdvanced( YoastPlugin::getPostMetaValue( 'meta-robots-adv', $post_id ) ),
-			'is_cornerstone'      => '1' === YoastPlugin::getPostMetaValue( 'is_cornerstone', $post_id ),
-			'breadcrumb_title'    => YoastPlugin::getPostMetaValue( 'bctitle', $post_id ),
-			'schema_page_type'    => YoastPlugin::getPostMetaValue( 'schema_page_type', $post_id ),
-			'schema_article_type' => YoastPlugin::getPostMetaValue( 'schema_article_type', $post_id ),
-		);
-
-		if ( (bool) YoastPlugin::getOption( 'opengraph', false, 'wpseo_social' ) ) {
-			$result['opengraph_title']       = YoastPlugin::getPostMetaValue( 'opengraph-title', $post_id );
-			$result['opengraph_description'] = YoastPlugin::getPostMetaValue( 'opengraph-description', $post_id );
-			$result['opengraph_image']       = YoastPlugin::getPostMetaValue( 'opengraph-image', $post_id );
-			$result['opengraph_image_id']    = YoastPlugin::getPostMetaValue( 'opengraph-image-id', $post_id );
-		}
-
-		if ( (bool) YoastPlugin::getOption( 'twitter', false, 'wpseo_social' ) ) {
-			$result['twitter_title']       = YoastPlugin::getPostMetaValue( 'twitter-title', $post_id );
-			$result['twitter_description'] = YoastPlugin::getPostMetaValue( 'twitter-description', $post_id );
-			$result['twitter_image']       = YoastPlugin::getPostMetaValue( 'twitter-image', $post_id );
-			$result['twitter_image_id']    = YoastPlugin::getPostMetaValue( 'twitter-image-id', $post_id );
-		}
-
-		return $result;
-	}
-
-	/**
-	 * Splits the stored advanced-robots CSV into a list of directive tokens.
-	 *
-	 * Yoast free stores only `noimageindex`, `noarchive`, and `nosnippet` here
-	 * (research-findings §3.1, `class-wpseo-meta.php:158-166`). An empty stored
-	 * value yields an empty list.
-	 *
-	 * @param string $csv The stored `meta-robots-adv` CSV value.
-	 * @return array<int,string> The directive tokens, empty when none are set.
-	 */
-	private function splitAdvanced( string $csv ): array {
-		$csv = trim( $csv );
-		if ( '' === $csv ) {
-			return array();
-		}
-
-		return array_values(
-			array_filter(
-				array_map( 'trim', explode( ',', $csv ) ),
-				static function ( string $token ): bool {
-					return in_array( $token, array( 'noimageindex', 'noarchive', 'nosnippet' ), true );
-				}
-			)
-		);
+		return YoastFieldShaper::curatedPostSeoRow( $post_id );
 	}
 }

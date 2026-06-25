@@ -43,6 +43,10 @@ final class Integration {
 	private const ABILITIES = array(
 		'og-yoast/get-post-seo',
 		'og-yoast/get-post-score',
+		'og-yoast/update-post-seo',
+		'og-yoast/update-post-schema',
+		'og-yoast/update-post-robots',
+		'og-yoast/update-post-canonical',
 	);
 
 	/**
