@@ -7,6 +7,7 @@ namespace GalatanOvidiu\AbilitiesCatalogYoast\Support;
 use WPSEO_Meta;
 use WPSEO_Options;
 use WPSEO_Rank;
+use WPSEO_Taxonomy_Meta;
 use WP_Error;
 use Yoast\WP\SEO\Config\Schema_Types;
 
@@ -59,6 +60,7 @@ final class YoastPlugin {
 		return defined( 'WPSEO_VERSION' )
 			&& class_exists( 'WPSEO_Meta' )
 			&& class_exists( 'WPSEO_Options' )
+			&& class_exists( 'WPSEO_Taxonomy_Meta' )
 			&& version_compare( (string) WPSEO_VERSION, self::MIN_VERSION, '>=' );
 	}
 
@@ -214,5 +216,47 @@ final class YoastPlugin {
 	 */
 	public static function schemaArticleTypes(): array {
 		return array_map( 'strval', array_keys( Schema_Types::ARTICLE_TYPES ) );
+	}
+
+	/**
+	 * Reads a taxonomy term's Yoast SEO meta through Yoast's own getter.
+	 *
+	 * Wraps `WPSEO_Taxonomy_Meta::get_term_meta()`. Per-term SEO lives in the single
+	 * `wpseo_taxonomy_meta` option, keyed by taxonomy and term, never in term meta and
+	 * with no REST route — so this is the read path. With `$meta` null it returns the
+	 * full merged array (the stored values merged over the per-term defaults). It
+	 * returns `false` when the term cannot be resolved.
+	 *
+	 * @param int         $term_id  The term ID to read.
+	 * @param string      $taxonomy The taxonomy the term belongs to.
+	 * @param string|null $meta     A single key (without the `wpseo_` prefix) to read, or null for the whole array. Default null.
+	 * @return ($meta is null ? array<string,mixed>|false : string|false) The merged meta array, a single value, or false when unresolvable.
+	 */
+	public static function getTermMeta( int $term_id, string $taxonomy, ?string $meta = null ) {
+		return WPSEO_Taxonomy_Meta::get_term_meta( $term_id, $taxonomy, $meta );
+	}
+
+	/**
+	 * Writes several Yoast SEO meta values for a taxonomy term through Yoast's setter.
+	 *
+	 * Wraps `WPSEO_Taxonomy_Meta::set_values()` — the same validated path Yoast's own
+	 * term-metabox save uses. The `$values` keys carry the full `wpseo_` prefix (e.g.
+	 * `wpseo_title`, `wpseo_focuskw`). It returns no success signal, so callers re-read
+	 * with {@see getTermMeta()} to confirm the write stuck.
+	 *
+	 * IMPORTANT: this is NOT a partial merge. Yoast retains the old value only for a
+	 * few keys; the text fields (`wpseo_title`, `wpseo_desc`, `wpseo_focuskw`,
+	 * `wpseo_canonical`) RESET to their default when absent from `$values`. Yoast's own
+	 * metabox always submits every field, so callers here must do the same: read the
+	 * current full meta, overlay the change, and pass the complete set — never a single
+	 * field on its own, or the other fields are wiped.
+	 *
+	 * @param int                 $term_id  The term ID to write.
+	 * @param string              $taxonomy The taxonomy the term belongs to.
+	 * @param array<string,mixed> $values   The complete `wpseo_*`-prefixed value set to store.
+	 * @return void
+	 */
+	public static function setTermValues( int $term_id, string $taxonomy, array $values ): void {
+		WPSEO_Taxonomy_Meta::set_values( $term_id, $taxonomy, $values );
 	}
 }

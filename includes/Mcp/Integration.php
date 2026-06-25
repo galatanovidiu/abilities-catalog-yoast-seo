@@ -47,6 +47,10 @@ final class Integration {
 		'og-yoast/update-post-schema',
 		'og-yoast/update-post-robots',
 		'og-yoast/update-post-canonical',
+		'og-yoast/get-term-seo',
+		'og-yoast/update-term-seo',
+		'og-yoast/update-term-robots',
+		'og-yoast/update-term-canonical',
 	);
 
 	/**

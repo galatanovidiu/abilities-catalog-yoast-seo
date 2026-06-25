@@ -121,4 +121,65 @@ final class YoastFieldShaper {
 			)
 		);
 	}
+
+	/**
+	 * Builds one taxonomy term's full curated Yoast SEO row, the single source of the shape.
+	 *
+	 * The `og-yoast/get-term-seo` read and `og-yoast/update-term-seo` write both return
+	 * the IDENTICAL flat row — title, meta description, focus keyphrase, canonical,
+	 * breadcrumb title, robots noindex, cornerstone flag, and the social overrides.
+	 * Building it here keeps the read and the write from drifting (the term analogue of
+	 * {@see curatedPostSeoRow()}).
+	 *
+	 * `$meta` is the merged term meta array from {@see YoastPlugin::getTermMeta()} (every
+	 * `wpseo_*` key, merged over the per-term defaults). The robots noindex value is
+	 * normalized to its closed enum, and the social keys are emitted only when their
+	 * `wpseo_social` flag is on — mirroring `get-post-seo`.
+	 *
+	 * @param array<string,mixed> $meta     The merged `wpseo_*` term meta array.
+	 * @param string              $taxonomy The taxonomy the term belongs to.
+	 * @param int                 $term_id  The term ID the row describes.
+	 * @return array<string,mixed> The flat curated term SEO row, in canonical key order.
+	 */
+	public static function curatedTermSeoRow( array $meta, string $taxonomy, int $term_id ): array {
+		$row = array(
+			'taxonomy'         => $taxonomy,
+			'term_id'          => $term_id,
+			'title'            => (string) ( $meta['wpseo_title'] ?? '' ),
+			'description'      => (string) ( $meta['wpseo_desc'] ?? '' ),
+			'focus_keyphrase'  => (string) ( $meta['wpseo_focuskw'] ?? '' ),
+			'canonical'        => (string) ( $meta['wpseo_canonical'] ?? '' ),
+			'breadcrumb_title' => (string) ( $meta['wpseo_bctitle'] ?? '' ),
+			'noindex'          => self::termNoindexValue( (string) ( $meta['wpseo_noindex'] ?? 'default' ) ),
+			'is_cornerstone'   => '1' === (string) ( $meta['wpseo_is_cornerstone'] ?? '0' ),
+		);
+
+		if ( (bool) YoastPlugin::getOption( 'opengraph', false, 'wpseo_social' ) ) {
+			$row['opengraph_title']       = (string) ( $meta['wpseo_opengraph-title'] ?? '' );
+			$row['opengraph_description'] = (string) ( $meta['wpseo_opengraph-description'] ?? '' );
+			$row['opengraph_image']       = (string) ( $meta['wpseo_opengraph-image'] ?? '' );
+		}
+
+		if ( (bool) YoastPlugin::getOption( 'twitter', false, 'wpseo_social' ) ) {
+			$row['twitter_title']       = (string) ( $meta['wpseo_twitter-title'] ?? '' );
+			$row['twitter_description'] = (string) ( $meta['wpseo_twitter-description'] ?? '' );
+			$row['twitter_image']       = (string) ( $meta['wpseo_twitter-image'] ?? '' );
+		}
+
+		return $row;
+	}
+
+	/**
+	 * Normalizes a stored term noindex value to its closed enum.
+	 *
+	 * Yoast validates `wpseo_noindex` against `['default','index','noindex']`
+	 * (research-findings §4.1). Any unexpected stored value falls back to `default`,
+	 * the safe inherit value, so the output never breaks its closed enum.
+	 *
+	 * @param string $stored The stored `wpseo_noindex` value.
+	 * @return string One of `default`, `index`, or `noindex`.
+	 */
+	private static function termNoindexValue( string $stored ): string {
+		return in_array( $stored, array( 'default', 'index', 'noindex' ), true ) ? $stored : 'default';
+	}
 }
