@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * categories register after plugins have loaded, never at file load.
  *
  * The `og-yoast` slug is a machine identifier only; it clears Yoast's own reserved
- * `yoast-seo` category slug. The human label and description stay clean Yoast SEO
+ * `yoast-seo` category slug. The human-facing description stays clean Yoast SEO
  * wording.
  *
  * @since 0.1.0
@@ -44,7 +44,7 @@ final class CategoryCatalog implements CategoryProvider {
 		return array(
 			'og-yoast' => array(
 				'slug'        => 'og-yoast',
-				'label'       => __( 'Yoast SEO', 'abilities-catalog-yoast' ),
+				'label'       => __( 'OG Yoast SEO', 'abilities-catalog-yoast' ),
 				'description' => __( 'Abilities that read and write Yoast SEO metadata for posts, terms, and authors, manage the site SEO settings, and rebuild the SEO index.', 'abilities-catalog-yoast' ),
 			),
 		);
