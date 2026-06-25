@@ -259,4 +259,19 @@ final class YoastPlugin {
 	public static function setTermValues( int $term_id, string $taxonomy, array $values ): void {
 		WPSEO_Taxonomy_Meta::set_values( $term_id, $taxonomy, $values );
 	}
+
+	/**
+	 * Whether Yoast leaves author archive pages enabled.
+	 *
+	 * Reads the `disable-author` option from Yoast's `wpseo_titles` group (default
+	 * `false`, i.e. archives enabled) and returns its negation, so a `true` result
+	 * means author archives are live. When archives are disabled, the per-author SEO
+	 * fields (title / meta description / noindex) are moot — Yoast neither renders nor
+	 * applies them — so the author abilities surface this so a no-op write is visible.
+	 *
+	 * @return bool True when author archives are enabled (the default).
+	 */
+	public static function authorArchivesEnabled(): bool {
+		return ! (bool) WPSEO_Options::get( 'disable-author', false, array( 'wpseo_titles' ) );
+	}
 }

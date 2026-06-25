@@ -51,6 +51,9 @@ final class Integration {
 		'og-yoast/update-term-seo',
 		'og-yoast/update-term-robots',
 		'og-yoast/update-term-canonical',
+		'og-yoast/get-author-seo',
+		'og-yoast/update-author-seo',
+		'og-yoast/update-author-noindex',
 	);
 
 	/**

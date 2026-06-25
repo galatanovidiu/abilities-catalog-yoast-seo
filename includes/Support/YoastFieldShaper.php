@@ -182,4 +182,29 @@ final class YoastFieldShaper {
 	private static function termNoindexValue( string $stored ): string {
 		return in_array( $stored, array( 'default', 'index', 'noindex' ), true ) ? $stored : 'default';
 	}
+
+	/**
+	 * Builds one author's curated Yoast SEO row, the single source of the shape.
+	 *
+	 * The `og-yoast/get-author-seo` read and `og-yoast/update-author-seo` write both
+	 * return the IDENTICAL flat row, so building it here keeps them from drifting (the
+	 * author analogue of {@see curatedPostSeoRow()} / {@see curatedTermSeoRow()}).
+	 *
+	 * Author SEO is plain WordPress user-meta, so the three values are read with core
+	 * `get_user_meta()` (not a Yoast symbol). `noindex` is the strict `'on'` test Yoast's
+	 * own frontend uses. `author_archives_enabled` comes through the facade so the
+	 * consumer knows whether these values take effect at all.
+	 *
+	 * @param int $author_id The author (user) ID the row describes.
+	 * @return array{author_id: int, seo_title: string, meta_description: string, noindex: bool, author_archives_enabled: bool} The flat curated author SEO row.
+	 */
+	public static function curatedAuthorSeoRow( int $author_id ): array {
+		return array(
+			'author_id'               => $author_id,
+			'seo_title'               => (string) get_user_meta( $author_id, 'wpseo_title', true ),
+			'meta_description'        => (string) get_user_meta( $author_id, 'wpseo_metadesc', true ),
+			'noindex'                 => 'on' === get_user_meta( $author_id, 'wpseo_noindex_author', true ),
+			'author_archives_enabled' => YoastPlugin::authorArchivesEnabled(),
+		);
+	}
 }
