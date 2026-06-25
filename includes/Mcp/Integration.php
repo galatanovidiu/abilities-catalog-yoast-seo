@@ -55,18 +55,33 @@ final class Integration {
 		'og-yoast/update-author-seo',
 		'og-yoast/update-author-noindex',
 		'og-yoast/get-search-appearance',
-		'og-yoast/get-breadcrumbs',
-		'og-yoast/get-knowledge-graph',
-		'og-yoast/get-social-settings',
-		'og-yoast/get-indexing-settings',
-		'og-yoast/get-general-settings',
 		'og-yoast/update-search-appearance',
+		'og-yoast/get-breadcrumbs',
 		'og-yoast/update-breadcrumbs',
+		'og-yoast/get-knowledge-graph',
 		'og-yoast/update-knowledge-graph',
+		'og-yoast/get-social-settings',
 		'og-yoast/update-social-settings',
+		'og-yoast/get-indexing-settings',
 		'og-yoast/update-indexing-settings',
+		'og-yoast/get-general-settings',
 		'og-yoast/update-general-settings',
 		'og-yoast/rebuild-seo-index',
+	);
+
+	/**
+	 * Yoast SEO's own score abilities, folded into the `og-yoast` tool when present.
+	 *
+	 * These ship with Yoast SEO itself (not this add-on), so they are appended to the
+	 * domain only when {@see \wp_has_ability()} confirms Yoast registered them — never
+	 * hard-listed, so the tool stays honest if a Yoast version omits one.
+	 *
+	 * @var list<string>
+	 */
+	private const YOAST_SCORE_ABILITIES = array(
+		'yoast-seo/get-seo-scores',
+		'yoast-seo/get-readability-scores',
+		'yoast-seo/get-inclusive-language-scores',
 	);
 
 	/**
@@ -95,9 +110,21 @@ final class Integration {
 			return $domains;
 		}
 
+		// Start with this add-on's own 26 abilities, then fold in Yoast's own score
+		// abilities — but only the ones Yoast actually registered, so the tool never lists
+		// an ability that cannot be called.
+		$abilities = self::ABILITIES;
+		foreach ( self::YOAST_SCORE_ABILITIES as $score_ability ) {
+			if ( ! wp_has_ability( $score_ability ) ) {
+				continue;
+			}
+
+			$abilities[] = $score_ability;
+		}
+
 		$domains['og-yoast'] = array(
 			'description' => __( 'Manage Yoast SEO — read and write SEO metadata for posts, terms, and authors, manage the site SEO settings, and rebuild the SEO index.', 'abilities-catalog-yoast' ),
-			'abilities'   => self::ABILITIES,
+			'abilities'   => $abilities,
 		);
 
 		return $domains;
