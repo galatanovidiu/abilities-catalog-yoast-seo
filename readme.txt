@@ -1,7 +1,7 @@
 === Abilities Catalog — Yoast SEO ===
 Contributors: ovidiu-galatan
 Tags: abilities-api, yoast, seo, ai, mcp
-Requires at least: 7.0
+Requires at least: 6.9
 Tested up to: 7.0
 Requires PHP: 8.1
 Stable tag: 0.1.0
@@ -27,6 +27,11 @@ Abilities Catalog are modified.
 Yoast SEO is a hard runtime dependency: while Yoast is inactive the `og-yoast/*`
 abilities do not register at all (they are absent from the Abilities API rather than
 registered-and-denying), and the og-yoast domain tool and knowledge concepts do not appear.
+
+These abilities are not meant to replace Yoast SEO's own. This add-on is a working
+bridge while Yoast SEO grows official Abilities API support. As soon as Yoast SEO
+ships its own abilities, the duplicated ones in this plugin will be removed to make
+room for the plugin-owned definitions.
 
 = Abilities =
 
