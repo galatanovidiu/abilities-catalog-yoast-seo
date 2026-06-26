@@ -33,8 +33,10 @@ appear.
 ## Installation
 
 1. Install and activate Yoast SEO.
-2. Install and activate this plugin. The Yoast abilities register
-   automatically — no build step.
+2. Download the latest plugin zip:
+   [abilities-catalog-yoast.zip](https://github.com/galatanovidiu/abilities-catalog-yoast-seo/releases/latest/download/abilities-catalog-yoast.zip).
+   In WordPress, go to **Plugins → Add New → Upload Plugin**, choose the zip, and
+   activate. The Yoast abilities register automatically — no build step.
 3. Optional: install Abilities Catalog and enable its MCP server. The Yoast
    abilities then appear through the catalog's search server, as a curated
    domain tool, and the SEO knowledge concepts become available.
