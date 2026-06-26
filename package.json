@@ -6,6 +6,7 @@
 	"files": [
 		"abilities-catalog-yoast.php",
 		"readme.txt",
+		"LICENSE",
 		"includes"
 	],
 	"repository": {

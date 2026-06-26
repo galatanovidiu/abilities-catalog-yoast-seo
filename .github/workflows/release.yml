@@ -1,0 +1,50 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build-zip:
+    name: Build and attach plugin zip
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify tag matches plugin version
+        env:
+          TAG_NAME: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          TAG="${TAG_NAME#v}"
+          HEADER_VERSION="$(grep -oP '^\s*\*\s*Version:\s*\K\S+' abilities-catalog-yoast.php | head -1)"
+          CONST_VERSION="$(grep -oP "ABILITIES_CATALOG_YOAST_VERSION',\s*'\K[^']+" abilities-catalog-yoast.php | head -1)"
+          echo "Tag (stripped):  $TAG"
+          echo "Header Version:  $HEADER_VERSION"
+          echo "Constant:        $CONST_VERSION"
+          if [ "$TAG" != "$HEADER_VERSION" ] || [ "$TAG" != "$CONST_VERSION" ]; then
+            echo "::error::Release tag '$TAG' must match both the plugin header Version ('$HEADER_VERSION') and ABILITIES_CATALOG_YOAST_VERSION ('$CONST_VERSION')."
+            exit 1
+          fi
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build plugin zip
+        run: npm run plugin-zip
+
+      - name: Attach zip to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ github.event.release.tag_name }}
+        run: gh release upload "$TAG_NAME" abilities-catalog-yoast.zip --clobber

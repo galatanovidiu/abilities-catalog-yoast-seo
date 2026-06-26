@@ -4,7 +4,7 @@
  * Plugin URI:        https://github.com/galatanovidiu/abilities-catalog-yoast
  * Description:       Registers the Yoast SEO management surface as Abilities API abilities (read and write SEO metadata for posts, terms, and authors, manage the site SEO settings, and rebuild the SEO index). An add-on for Abilities Catalog: it works standalone on the core Abilities API, and when the Abilities Catalog MCP server is active it contributes a Yoast SEO domain tool and knowledge concepts.
  * Version:           0.1.0
- * Requires at least: 7.0
+ * Requires at least: 6.9
  * Requires PHP:      8.1
  * Requires Plugins:  wordpress-seo
  * Author:            Ovidiu Galatan
@@ -62,7 +62,7 @@ add_action(
 		// absent while Yoast SEO is inactive.
 		( new Registry() )->register();
 
-		// The Abilities API ships with WordPress 7.0; without it there is nothing to
+		// The Abilities API ships with WordPress 6.9; without it there is nothing to
 		// expose, so the optional MCP integration below has no hooks to attach to.
 		if ( ! function_exists( 'wp_register_ability' ) ) {
 			return;
